@@ -13,12 +13,12 @@ export default function Cell({ value, onClick, isWinning, disabled, index }: Cel
     <button
       className={`
         relative aspect-square w-full rounded-lg
-        flex items-center justify-center text-5xl md:text-6xl font-bold
+        flex items-center justify-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold
         transition-all duration-300 transform
-        ${!value && !disabled ? 'hover:scale-105 hover:bg-gray-50 cursor-pointer' : ''}
+        ${!value && !disabled ? 'hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer' : ''}
         ${disabled && !value ? 'cursor-not-allowed' : ''}
-        ${isWinning ? 'bg-yellow-200 animate-pulse' : 'bg-white'}
-        border-4 border-gray-200
+        ${isWinning ? 'bg-yellow-200 dark:bg-yellow-400 animate-pulse' : 'bg-white dark:bg-gray-800'}
+        border-4 border-gray-200 dark:border-gray-600
         ${value ? 'animate-scaleIn' : ''}
       `}
       onClick={onClick}

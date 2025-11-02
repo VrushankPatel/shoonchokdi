@@ -11,19 +11,19 @@ export default function Statistics({ stats }: StatisticsProps) {
 
   return (
     <div className="w-full max-w-md mx-auto mt-6">
-      <h3 className="text-xl font-bold text-gray-800 mb-3 text-center">Statistics</h3>
+      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-3 text-center">Statistics</h3>
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white rounded-xl p-4 shadow-lg text-center">
-          <div className="text-2xl font-bold text-gray-800">{stats.gamesPlayed}</div>
-          <div className="text-xs text-gray-600 mt-1">Games</div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg text-center">
+          <div className="text-2xl font-bold text-gray-800 dark:text-gray-200">{stats.gamesPlayed}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Games</div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-lg text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg text-center">
           <div className="text-2xl font-bold text-green-500">{stats.wins}</div>
-          <div className="text-xs text-gray-600 mt-1">Wins</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Wins</div>
         </div>
-        <div className="bg-white rounded-xl p-4 shadow-lg text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg text-center">
           <div className="text-2xl font-bold text-red-500">{stats.losses}</div>
-          <div className="text-xs text-gray-600 mt-1">Losses</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">Losses</div>
         </div>
       </div>
 

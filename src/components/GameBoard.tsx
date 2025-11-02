@@ -1,31 +1,36 @@
-import { Board } from '../utils/gameLogic';
+import { Board, BoardSize, WinningCombination } from '../utils/gameLogic';
 import Cell from './Cell';
+import WinningLine from './WinningLine';
 
 interface GameBoardProps {
   board: Board;
   onCellClick: (index: number) => void;
-  winningLine: number[] | null;
+  winningCombination: WinningCombination | null;
   disabled: boolean;
+  boardSize: BoardSize;
 }
 
-export default function GameBoard({ board, onCellClick, winningLine, disabled }: GameBoardProps) {
+export default function GameBoard({ board, onCellClick, winningCombination, disabled, boardSize }: GameBoardProps) {
+  const maxWidth = boardSize === 3 ? 'max-w-md' : boardSize === 4 ? 'max-w-lg' : 'max-w-xl';
+  const gap = boardSize === 3 ? 'gap-3' : boardSize === 4 ? 'gap-2' : 'gap-1.5';
+
   return (
-    <div className="relative w-full max-w-md mx-auto">
-      <div className="grid grid-cols-3 gap-3 p-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-2xl">
+    <div className={`relative w-full ${maxWidth} mx-auto`}>
+      <div className={`grid grid-cols-${boardSize} ${gap} p-4 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-2xl`} style={{ gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))` }}>
         {board.map((cell, index) => (
           <Cell
             key={index}
             value={cell}
             onClick={() => onCellClick(index)}
-            isWinning={winningLine?.includes(index) ?? false}
+            isWinning={winningCombination?.line.includes(index) ?? false}
             disabled={disabled}
             index={index}
           />
         ))}
       </div>
-      {winningLine && (
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className="w-full h-1 bg-yellow-400 animate-drawLine shadow-lg" />
+      {winningCombination && (
+        <div className="absolute inset-0 pointer-events-none p-4">
+          <WinningLine winningCombination={winningCombination} boardSize={boardSize} />
         </div>
       )}
     </div>

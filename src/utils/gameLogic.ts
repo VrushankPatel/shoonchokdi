@@ -2,28 +2,54 @@ export type Player = 'X' | 'O';
 export type Cell = Player | null;
 export type Board = Cell[];
 export type Difficulty = 'easy' | 'medium' | 'hard';
+export type BoardSize = 3 | 4 | 5;
 
 export interface WinningCombination {
   line: number[];
   winner: Player;
+  direction: 'horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up';
 }
 
-const WINNING_LINES = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6],
-];
+function generateWinningLines(size: BoardSize): { lines: number[][], directions: ('horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up')[] } {
+  const lines: number[][] = [];
+  const directions: ('horizontal' | 'vertical' | 'diagonal-down' | 'diagonal-up')[] = [];
 
-export function checkWinner(board: Board): WinningCombination | null {
-  for (const line of WINNING_LINES) {
-    const [a, b, c] = line;
-    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return { line, winner: board[a] as Player };
+  for (let i = 0; i < size; i++) {
+    const row: number[] = [];
+    const col: number[] = [];
+    for (let j = 0; j < size; j++) {
+      row.push(i * size + j);
+      col.push(j * size + i);
+    }
+    lines.push(row);
+    directions.push('horizontal');
+    lines.push(col);
+    directions.push('vertical');
+  }
+
+  const diag1: number[] = [];
+  const diag2: number[] = [];
+  for (let i = 0; i < size; i++) {
+    diag1.push(i * size + i);
+    diag2.push(i * size + (size - 1 - i));
+  }
+  lines.push(diag1);
+  directions.push('diagonal-down');
+  lines.push(diag2);
+  directions.push('diagonal-up');
+
+  return { lines, directions };
+}
+
+export function checkWinner(board: Board, size: BoardSize): WinningCombination | null {
+  const { lines, directions } = generateWinningLines(size);
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const firstCell = board[line[0]];
+
+    if (firstCell && line.every(index => board[index] === firstCell)) {
+      return { line, winner: firstCell as Player, direction: directions[i] };
     }
   }
   return null;
@@ -46,10 +72,11 @@ export function minimax(
   isMaximizing: boolean,
   aiPlayer: Player,
   humanPlayer: Player,
+  size: BoardSize,
   alpha: number = -Infinity,
   beta: number = Infinity
 ): number {
-  const winner = checkWinner(board);
+  const winner = checkWinner(board, size);
 
   if (winner) {
     return winner.winner === aiPlayer ? 10 - depth : -10 + depth;
@@ -63,7 +90,7 @@ export function minimax(
     let bestScore = -Infinity;
     for (const move of getAvailableMoves(board)) {
       board[move] = aiPlayer;
-      const score = minimax(board, depth + 1, false, aiPlayer, humanPlayer, alpha, beta);
+      const score = minimax(board, depth + 1, false, aiPlayer, humanPlayer, size, alpha, beta);
       board[move] = null;
       bestScore = Math.max(score, bestScore);
       alpha = Math.max(alpha, bestScore);
@@ -74,7 +101,7 @@ export function minimax(
     let bestScore = Infinity;
     for (const move of getAvailableMoves(board)) {
       board[move] = humanPlayer;
-      const score = minimax(board, depth + 1, true, aiPlayer, humanPlayer, alpha, beta);
+      const score = minimax(board, depth + 1, true, aiPlayer, humanPlayer, size, alpha, beta);
       board[move] = null;
       bestScore = Math.min(score, bestScore);
       beta = Math.min(beta, bestScore);
@@ -88,7 +115,8 @@ export function findBestMove(
   board: Board,
   aiPlayer: Player,
   humanPlayer: Player,
-  difficulty: Difficulty
+  difficulty: Difficulty,
+  size: BoardSize
 ): number {
   const availableMoves = getAvailableMoves(board);
 
@@ -98,25 +126,54 @@ export function findBestMove(
     if (Math.random() < 0.7) {
       return availableMoves[Math.floor(Math.random() * availableMoves.length)];
     }
-    const blockingMove = findBlockingMove(board, humanPlayer);
+    const blockingMove = findBlockingMove(board, humanPlayer, size);
     if (blockingMove !== -1) return blockingMove;
     return availableMoves[Math.floor(Math.random() * availableMoves.length)];
   }
 
   if (difficulty === 'medium') {
-    const winningMove = findWinningMove(board, aiPlayer);
+    const winningMove = findWinningMove(board, aiPlayer, size);
     if (winningMove !== -1) return winningMove;
 
-    const blockingMove = findBlockingMove(board, humanPlayer);
+    const blockingMove = findBlockingMove(board, humanPlayer, size);
     if (blockingMove !== -1) return blockingMove;
 
-    if (board[4] === null) return 4;
+    const centerIndex = Math.floor(size * size / 2);
+    if (board[centerIndex] === null && size % 2 === 1) return centerIndex;
 
     if (Math.random() < 0.3) {
       return availableMoves[Math.floor(Math.random() * availableMoves.length)];
     }
 
-    const corners = [0, 2, 6, 8].filter(pos => board[pos] === null);
+    const corners = [
+      0,
+      size - 1,
+      size * (size - 1),
+      size * size - 1
+    ].filter(pos => board[pos] === null);
+    if (corners.length > 0) {
+      return corners[Math.floor(Math.random() * corners.length)];
+    }
+
+    return availableMoves[Math.floor(Math.random() * availableMoves.length)];
+  }
+
+  if (size >= 4 && availableMoves.length > 12) {
+    const winningMove = findWinningMove(board, aiPlayer, size);
+    if (winningMove !== -1) return winningMove;
+
+    const blockingMove = findBlockingMove(board, humanPlayer, size);
+    if (blockingMove !== -1) return blockingMove;
+
+    const centerIndex = Math.floor(size * size / 2);
+    if (board[centerIndex] === null && size % 2 === 1) return centerIndex;
+
+    const corners = [
+      0,
+      size - 1,
+      size * (size - 1),
+      size * size - 1
+    ].filter(pos => board[pos] === null);
     if (corners.length > 0) {
       return corners[Math.floor(Math.random() * corners.length)];
     }
@@ -129,7 +186,7 @@ export function findBestMove(
 
   for (const move of availableMoves) {
     board[move] = aiPlayer;
-    const score = minimax(board, 0, false, aiPlayer, humanPlayer);
+    const score = minimax(board, 0, false, aiPlayer, humanPlayer, size);
     board[move] = null;
 
     if (score > bestScore) {
@@ -141,23 +198,25 @@ export function findBestMove(
   return bestMove;
 }
 
-function findWinningMove(board: Board, player: Player): number {
-  for (const line of WINNING_LINES) {
+function findWinningMove(board: Board, player: Player, size: BoardSize): number {
+  const { lines } = generateWinningLines(size);
+
+  for (const line of lines) {
     const values = line.map(i => board[i]);
     const playerCount = values.filter(v => v === player).length;
     const emptyCount = values.filter(v => v === null).length;
 
-    if (playerCount === 2 && emptyCount === 1) {
+    if (playerCount === size - 1 && emptyCount === 1) {
       return line[values.indexOf(null)];
     }
   }
   return -1;
 }
 
-function findBlockingMove(board: Board, opponent: Player): number {
-  return findWinningMove(board, opponent);
+function findBlockingMove(board: Board, opponent: Player, size: BoardSize): number {
+  return findWinningMove(board, opponent, size);
 }
 
-export function createEmptyBoard(): Board {
-  return Array(9).fill(null);
+export function createEmptyBoard(size: BoardSize = 3): Board {
+  return Array(size * size).fill(null);
 }

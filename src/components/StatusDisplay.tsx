@@ -33,7 +33,7 @@ export default function StatusDisplay({
     }
 
     if (gameStatus === 'draw') {
-      return <span className="text-gray-600">It's a Draw! Well Played!</span>;
+      return <span className="text-gray-600 dark:text-gray-400">It's a Draw! Well Played!</span>;
     }
 
     if (isAiThinking) {
